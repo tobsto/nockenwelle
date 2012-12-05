@@ -1,4 +1,4 @@
 nockenwelle
 ===========
 
-Ein Feld von Nockenwellen erzeugen eine ebene Welle
+Dreidimensionale Simulation eines Feldes von Nockenwellen welche eine Ebene Welle erzeugen.
