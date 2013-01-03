@@ -172,6 +172,32 @@ void nockenwelle(int i)
 
 	}
 }
+
+void nockenwelle_halb_verschoben(int i)
+{
+        zylinder(r_shaft, l_z, Ns_shaft);
+	translate(0,0,-l_z/2);
+	// Verschiebe um halben Gitterparameter und Rotiere demensprechend
+	translate(0,0, a_z/2.0);
+	rotateZ(k_z*a_z/2.0);
+	// Drehung der Nocke (Anteil in z-Richtung)
+	rotateZ(i*k_x*a_x);
+	for (int j=0; j!=N_z-2; j++)
+	{
+		// Drehung der Nocke (Anteil in z-Richtung)
+		psi=k_z*a_z;
+		//psi=k_z*a_z;
+		rotateZ(psi);
+
+		// Position der Nocke
+		translate( 0, 0, l_z/N_z);
+		// Male Nocke mit versetztem Mittelpunkt
+		translate(cam_offset,0,0);
+        	nocke(cam_semi_major_axis, cam_semi_minor_axis, cam_thickness, Ns_cam);
+		translate(-cam_offset,0,0);
+
+	}
+}
 void setup()
 {
 	noStroke();
@@ -190,23 +216,37 @@ void draw()
 	// Perspektive
 	float c_h=1.0;
 	float c_v=2;
+	// Pespektive mit Maus verändern
 	camera(c_h*width*cos(TWO_PI/width*mouseX)+width/2, c_v*mouseY-height/2, c_h*width*sin(TWO_PI/width*mouseX), width/2, height/2, 0.0, 0, 1, 0);
+	// Feste Perspektive
+	//camera(0,0, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
+
+	// Versuche
 	//camera(2*mouseX-width/2, 0.0, 2*mouseY-height/2, width/2, height/2, 0, 0, 1, 0);
 	//camera(mouseX, mouseY, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
 	//camera(mouseX,height/16, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
-	//camera(0,0, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
 
 	translate(-l_x/2,0,0);
 
 	float axis_angle=TWO_PI/4.0;
 	for (int i=0; i!=N_x; i++)
 	{
+		// Verschiebung in x-Richtung
 		translate(l_x/N_x,0,0);
 		pushMatrix();
+		// Zentrieren
 		translate(width/2, height/2);
+		// 'Motor' Drehung
 		rotateZ(phi);
-		//rotateZ(inc+axis_angle/N_x *i);
-		nockenwelle(i);
+		// Zeichne Nockenwelle
+		if (i%2==0)
+		{
+			nockenwelle(i);
+		}
+		else
+		{
+			nockenwelle_halb_verschoben(i);
+		}
 		popMatrix();
 	}
 }
