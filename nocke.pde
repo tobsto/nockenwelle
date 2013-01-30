@@ -150,17 +150,18 @@ int Ns_shaft=50;
 // Temporär
 float psi;
 
+float phase_ebene_welle(int i, int j, float kx, float kz, float ax, float az)
+{
+	return i*kx*ax + j*kz*az;
+}
 void nockenwelle(int i)
 {
         zylinder(r_shaft, l_z, Ns_shaft);
 	translate(0,0,-l_z/2);
-	// Drehung der Nocke (Anteil in z-Richtung)
-	rotateZ(i*k_x*a_x);
 	for (int j=0; j!=N_z-1; j++)
 	{
 		// Drehung der Nocke (Anteil in z-Richtung)
-		psi=k_z*a_z;
-		//psi=k_z*a_z;
+		psi=phase_ebene_welle(i, j, k_x, k_z, a_x, a_z);
 		rotateZ(psi);
 
 		// Position der Nocke
@@ -169,6 +170,7 @@ void nockenwelle(int i)
 		translate(cam_offset,0,0);
         	nocke(cam_semi_major_axis, cam_semi_minor_axis, cam_thickness, Ns_cam);
 		translate(-cam_offset,0,0);
+		rotateZ(-psi);
 
 	}
 }
@@ -239,6 +241,9 @@ void draw()
 		// 'Motor' Drehung
 		rotateZ(phi);
 		// Zeichne Nockenwelle
+		nockenwelle(i);
+		/*
+		// Zeichne Nockenwelle
 		if (i%2==0)
 		{
 			nockenwelle(i);
@@ -247,6 +252,7 @@ void draw()
 		{
 			nockenwelle_halb_verschoben(i);
 		}
+		*/
 		popMatrix();
 	}
 }
