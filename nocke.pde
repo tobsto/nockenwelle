@@ -235,12 +235,49 @@ void nockenwelle_halb_verschoben(int i)
 
 	}
 }
+void saveAnglesKugel()
+{
+	String dataAsString = "";
+	String [] exportData = new String [N_z];
+	for (int i = 0; i<N_z; i++)
+	{
+		dataAsString = "";
+		for (int j=0; j<N_x; j++)
+		{
+			// Phasenwinkel in Grad
+			float data =360.0/TWO_PI * phase_kugel_welle(i, j, k, a_x, a_z, r_x, r_z) % 360;     
+			dataAsString += str (data) +  "\t";
+		}
+		exportData [i] = dataAsString;
+	}
+	saveStrings ("phasenwinkel_kugelwelle.txt", exportData);
+}
+void saveAnglesEbene()
+{
+	String dataAsString = "";
+	String [] exportData = new String [N_z];
+	for (int i = 0; i<N_z; i++)
+	{
+		dataAsString = "";
+		for (int j=0; j<N_x; j++)
+		{
+			// Phasenwinkel in Grad
+			float data =360.0/TWO_PI * phase_ebene_welle(i, j, k_x, k_z, a_x, a_z) % 360;     
+			dataAsString += str (data) +  "\t";
+		}
+		exportData [i] = dataAsString;
+	}
+	saveStrings ("phasenwinkel_ebenewelle.txt", exportData);
+}
 void setup()
 {
 	noStroke();
 	size(size_x, size_y, OPENGL);
 	//size(600,600,P3D);
 	frameRate(fRate);
+	saveAnglesKugel();
+	// Quadrat-Gitter, Ebene Welle
+	//saveAnglesEbene();
 }
 
 void draw() 
