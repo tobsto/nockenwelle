@@ -63,9 +63,9 @@ boolean closedFlag=false;
 // Abstand des Achsenmittelpunktes vom Mittelpunkt der Nocke (Ellipse)
 float cam_offset=0.20*a_x;
 // Große Halbachse der Ellipse
-float cam_semi_major_axis=0.3*a_x;
+float cam_semi_major_axis=0.4*a_x;
 // Kleine Halbachse der Ellipse
-float cam_semi_minor_axis=0.2*a_x;
+float cam_semi_minor_axis=0.4*a_x;
 // Dicke der Nocke
 float cam_thickness=0.3*a_z;
 // Anzahl der Ebenen die die gekrümmte Oberfläche der Nocke bilden
