@@ -1,5 +1,90 @@
 import processing.opengl.*;
 
+
+// *****************
+// *** Parameter ***
+// *****************
+
+// Bild
+// Bildbreite
+int size_x=600;
+// Bildhöhe 
+int size_y=600;
+// Frame Rate (pro Sekunde)
+int fRate=10;
+
+// *******************************************************************
+// Gesamtsystem (N_x Achsen, welche jeweils in z-Richtung zeigen)
+// *******************************************************************
+// Gesamtdrehwinkel
+float phi=0.0;
+// Drehgeschwindigkeit in Umdrehungen pro Sekunde (Framerate ist 60/s) 
+float delta_phi=1.0*TWO_PI/fRate;
+// Länge in x-Richtung
+float l_x=600;
+// Anzahl der Achsen
+int N_x=25;
+// Länge in z-Richtung
+float l_z=600;
+// Anzahl der Nocken pro Welle
+int N_z=100;
+// Gitterparamter in x-Richtung
+float a_x=l_x/N_x;
+// Gitterparamter in z-Richtung
+float a_z=l_z/N_z;
+
+// *******************************************************************
+// Welle (Bewegungsart)
+// *******************************************************************
+// Kugelwelle (true) oder Ebenewelle (false)
+boolean kugelFlag=true;
+// Wellenlänge
+float lambda=12.5*a_z;
+// Winkel zwischen x-Achse und Ausbreitungsrichtung der Welle (in Radiant)
+float theta=PI/2 * 0.6;
+// Kugel-Welle
+// Quellenposition der Kugelwelle in x-Richtung (in Einheiten der Gitterparameter)
+float r_x=N_x/2.0;
+// Quellenposition der Kugelwelle in z-Richtung (in Einheiten der Gitterparameter)
+float r_z=N_z/2.0;
+
+// Abgeleitete Parameter (nicht verändern!)
+// Wellenvektor (Kugelwelle)
+float k=TWO_PI/lambda;
+// Wellenvektor (Ebene Welle)
+float k_x=TWO_PI/lambda * cos(theta);
+float k_z=TWO_PI/lambda * sin(theta);
+
+// *******************************************************************
+// Nocke
+// *******************************************************************
+// Oberfläche offen (true) oder geschlossen (false)
+boolean closedFlag=false;
+// Abstand des Achsenmittelpunktes vom Mittelpunkt der Nocke (Ellipse)
+float cam_offset=0.20*a_x;
+// Große Halbachse der Ellipse
+float cam_semi_major_axis=0.3*a_x;
+// Kleine Halbachse der Ellipse
+float cam_semi_minor_axis=0.2*a_x;
+// Dicke der Nocke
+float cam_thickness=0.3*a_z;
+// Anzahl der Ebenen die die gekrümmte Oberfläche der Nocke bilden
+int Ns_cam=50;
+
+// *******************************************************************
+// Nockenwelle
+// *******************************************************************
+// Nocken halb versetzt (true) oder nicht (false)
+boolean offset=true;
+// Radius der Welle
+float r_shaft=0.05*a_x;
+// Anzahl der Ebenen die die gekrümmte Oberfläche der Welle bilden
+int Ns_shaft=50;
+
+
+// ********************************************************************
+// Programm (Nicht verändern)
+// ********************************************************************
 void zylinder(float r, float h, int sides)
 {
 	float phi;
@@ -40,7 +125,7 @@ void zylinder(float r, float h, int sides)
 	}
 	endShape();
 }
-void nocke(float a, float b, float h, int sides)
+void nocke(float a, float b, float h, int sides, boolean closed)
 {
 	if (a<b)
 	{
@@ -64,14 +149,17 @@ void nocke(float a, float b, float h, int sides)
 		y[i] = r * sin(phi);
 	}
  
-	//draw the top 
-	beginShape(TRIANGLE_FAN);
-	vertex(0, 0, h/2);
-	for(int i=0; i < x.length; i++)
+	if (closed==true)
 	{
-		vertex(x[i], y[i], h/2);
+		//draw the top 
+		beginShape(TRIANGLE_FAN);
+		vertex(0, 0, h/2);
+		for(int i=0; i < x.length; i++)
+		{
+			vertex(x[i], y[i], h/2);
+		}
+		endShape();
 	}
-	endShape();
  
 	//draw the outline
 	beginShape(QUAD_STRIP); 
@@ -82,170 +170,130 @@ void nocke(float a, float b, float h, int sides)
 	}
 	endShape();
  
-	//draw the bottom
-	beginShape(TRIANGLE_FAN); 
-	vertex(0, 0, -h/2);
-	for(int i=0; i < x.length; i++)
+	if (closed==true)
 	{
-		vertex(x[i], y[i], -h/2);
+		//draw the bottom
+		beginShape(TRIANGLE_FAN); 
+		vertex(0, 0, -h/2);
+		for(int i=0; i < x.length; i++)
+		{
+			vertex(x[i], y[i], -h/2);
+		}
+		endShape();
 	}
-	endShape();
 }
 
-// *****************
-// *** Parameter ***
-// *****************
-
-// Bild
-// Bildbreite
-int size_x=600;
-// Bildhöhe 
-int size_y=600;
-// Frame Rate (pro Sekunde)
-int fRate=10;
-
-// Gesamtsystem (N_x Achsen, welche jeweils in z-Richtung zeigen)
-// Gesamtdrehwinkel
-float phi=0.0;
-// Drehgeschwindigkeit in Umdrehungen pro Sekunde (Framerate ist 60/s) 
-float delta_phi=1.0*TWO_PI/fRate;
-// Länge in x-Richtung
-float l_x=600;
-// Anzahl der Achsen
-int N_x=30;
-// Länge in z-Richtung
-float l_z=600;
-// Anzahl der Nocken pro Welle
-int N_z=30;
-// Gitterparamter in x-Richtung
-float a_x=l_x/N_x;
-// Gitterparamter in z-Richtung
-float a_z=l_z/N_z;
-
-// Welle
-// Wellenlänge
-float lambda=12.5*a_z;
-// Ebene Welle
-// Winkel zwischen x-Achse und Ausbreitungsrichtung der Welle (in Radiant)
-float theta=PI/2 * 0.6;
-// Wellenvektor
-float k_x=TWO_PI/lambda * cos(theta);
-float k_z=TWO_PI/lambda * sin(theta);
-// Kugel-Welle
-// Quellenposition der Kugelwelle in x-Richtung (in Einheiten der Gitterparameter)
-float r_x=N_x/2.0;
-// Quellenposition der Kugelwelle in z-Richtung (in Einheiten der Gitterparameter)
-float r_z=N_z/2.0;
-// Wellenvektor
-float k=TWO_PI/lambda;
-
-// Nocke
-// Abstand des Achsenmittelpunktes vom Mittelpunkt der Nocke (Ellipse)
-float cam_offset=0.15*a_x;
-// Große Halbachse der Ellipse
-float cam_semi_major_axis=0.3*a_x;
-// Kleine Halbachse der Ellipse
-float cam_semi_minor_axis=0.3*a_x;
-// Dicke der Nocke
-float cam_thickness=0.3*a_z;
-// Anzahl der Ebenen die die gekrümmte Oberfläche der Nocke bilden
-int Ns_cam=50;
-
-// Nockenwelle
-// Radius der Welle
-float r_shaft=0.05*a_x;
-// Anzahl der Ebenen die die gekrümmte Oberfläche der Welle bilden
-int Ns_shaft=50;
 
 // Temporär
 float psi;
 
-float phase_kugel_welle(int i, int j, float k, float ax, float az, float rx, float rz)
+float phase_kugel_welle(float i, float j, float k, float ax, float az, float rx, float rz)
 {
 	return k*sqrt(pow((i-rx)*ax, 2)+pow((j-rz)*az, 2));
 }
-void nockenwelle_kugel(int i)
+void nockenwelle_kugel(int i, boolean offset)
 {
         zylinder(r_shaft, l_z, Ns_shaft);
+	// Gehe zu Anfang der Welle
 	translate(0,0,-l_z/2);
-	for (int j=0; j!=N_z-1; j++)
+	// Verschiebe um halben Gitterabstand
+	translate(0,0, a_z/2.0);
+
+	// bei versetzen Nockenwellen, male eine Nocke weniger
+	int NN=N_z;
+	if (offset)
+	{
+		NN=N_z-i%2;
+	}
+	for (int j=0; j!=NN; j++)
 	{
 		// Drehung der Nocke (Anteil in z-Richtung)
-		psi=phase_kugel_welle(i, j, k, a_x, a_z, r_x, r_z);
+		float jp = j;
+		if (offset)
+		{ 
+			jp+=i%2*0.5;
+		}
+		psi=phase_kugel_welle(float(i), jp, k, a_x, a_z, r_x, r_z);
 		rotateZ(psi);
-
 		// Position der Nocke
-		translate( 0, 0, l_z/N_z);
+		translate( 0, 0, jp*l_z/N_z);
 		// Male Nocke mit versetztem Mittelpunkt
 		translate(cam_offset,0,0);
-        	nocke(cam_semi_major_axis, cam_semi_minor_axis, cam_thickness, Ns_cam);
+        	nocke(cam_semi_major_axis, cam_semi_minor_axis, cam_thickness, Ns_cam, closedFlag);
 		translate(-cam_offset,0,0);
+		// drehe zurück
 		rotateZ(-psi);
+		// position zurück
+		translate( 0, 0, -jp*l_z/N_z);
 
 	}
 }
 
-float phase_ebene_welle(int i, int j, float kx, float kz, float ax, float az)
+float phase_ebene_welle(float i, float j, float kx, float kz, float ax, float az)
 {
 	return i*kx*ax + j*kz*az;
 }
-void nockenwelle(int i)
+
+void nockenwelle_ebene(int i, boolean offset)
 {
         zylinder(r_shaft, l_z, Ns_shaft);
+	// Gehe zu Anfang der Welle
 	translate(0,0,-l_z/2);
-	for (int j=0; j!=N_z-1; j++)
-	{
-		// Drehung der Nocke (Anteil in z-Richtung)
-		psi=phase_ebene_welle(i, j, k_x, k_z, a_x, a_z);
-		rotateZ(psi);
-
-		// Position der Nocke
-		translate( 0, 0, l_z/N_z);
-		// Male Nocke mit versetztem Mittelpunkt
-		translate(cam_offset,0,0);
-        	nocke(cam_semi_major_axis, cam_semi_minor_axis, cam_thickness, Ns_cam);
-		translate(-cam_offset,0,0);
-		rotateZ(-psi);
-
-	}
-}
-
-void nockenwelle_halb_verschoben(int i)
-{
-        zylinder(r_shaft, l_z, Ns_shaft);
-	translate(0,0,-l_z/2);
-	// Verschiebe um halben Gitterparameter und Rotiere demensprechend
+	// Verschiebe um halben Gitterabstand
 	translate(0,0, a_z/2.0);
-	rotateZ(k_z*a_z/2.0);
-	// Drehung der Nocke (Anteil in z-Richtung)
-	rotateZ(i*k_x*a_x);
-	for (int j=0; j!=N_z-2; j++)
+
+	// bei versetzen Nockenwellen, male eine Nocke weniger
+	int NN=N_z;
+	if (offset)
+	{
+		NN=N_z-i%2;
+	}
+	for (int j=0; j!=NN; j++)
 	{
 		// Drehung der Nocke (Anteil in z-Richtung)
-		psi=k_z*a_z;
-		//psi=k_z*a_z;
+		float jp = j;
+		if (offset)
+		{ 
+			jp+=i%2*0.5;
+		}
+		psi=phase_ebene_welle(float(i), jp , k_x, k_z, a_x, a_z);
 		rotateZ(psi);
-
 		// Position der Nocke
-		translate( 0, 0, l_z/N_z);
+		translate( 0, 0, jp*l_z/N_z);
 		// Male Nocke mit versetztem Mittelpunkt
 		translate(cam_offset,0,0);
-        	nocke(cam_semi_major_axis, cam_semi_minor_axis, cam_thickness, Ns_cam);
+        	nocke(cam_semi_major_axis, cam_semi_minor_axis, cam_thickness, Ns_cam, closedFlag);
 		translate(-cam_offset,0,0);
+		// drehe zurück
+		rotateZ(-psi);
+		// position zurück
+		translate( 0, 0, -jp*l_z/N_z);
 
 	}
 }
+
 void saveAnglesKugel()
 {
 	String dataAsString = "";
-	String [] exportData = new String [N_z];
-	for (int i = 0; i<N_z; i++)
+	String [] exportData = new String [N_x];
+	for (int i = 0; i<N_x; i++)
 	{
 		dataAsString = "";
-		for (int j=0; j<N_x; j++)
+		int NN=N_z;
+		if (offset)
 		{
+			NN=N_z-i%2;
+		}
+		for (int j=0; j!=NN; j++)
+		{
+			// Drehung der Nocke (Anteil in z-Richtung)
+			float jp = j;
+			if (offset)
+			{ 
+				jp+=i%2*0.5;
+			}
 			// Phasenwinkel in Grad
-			float data =360.0/TWO_PI * phase_kugel_welle(i, j, k, a_x, a_z, r_x, r_z) % 360;     
+			float data =360.0/TWO_PI * phase_kugel_welle(float(i), jp, k, a_x, a_z, r_x, r_z) % 360;     
 			dataAsString += str (data) +  "\t";
 		}
 		exportData [i] = dataAsString;
@@ -255,29 +303,48 @@ void saveAnglesKugel()
 void saveAnglesEbene()
 {
 	String dataAsString = "";
-	String [] exportData = new String [N_z];
-	for (int i = 0; i<N_z; i++)
+	String [] exportData = new String [N_x];
+	for (int i = 0; i<N_x; i++)
 	{
 		dataAsString = "";
-		for (int j=0; j<N_x; j++)
+		int NN=N_z;
+		if (offset)
 		{
+			NN=N_z-i%2;
+		}
+		for (int j=0; j!=NN; j++)
+		{
+			// Drehung der Nocke (Anteil in z-Richtung)
+			float jp = j;
+			if (offset)
+			{ 
+				jp+=i%2*0.5;
+			}
 			// Phasenwinkel in Grad
-			float data =360.0/TWO_PI * phase_ebene_welle(i, j, k_x, k_z, a_x, a_z) % 360;     
+			float data =360.0/TWO_PI * phase_ebene_welle(i, jp, k_x, k_z, a_x, a_z) % 360;     
 			dataAsString += str (data) +  "\t";
 		}
 		exportData [i] = dataAsString;
 	}
 	saveStrings ("phasenwinkel_ebenewelle.txt", exportData);
 }
+
 void setup()
 {
 	noStroke();
 	size(size_x, size_y, OPENGL);
 	//size(600,600,P3D);
 	frameRate(fRate);
-	saveAnglesKugel();
-	// Quadrat-Gitter, Ebene Welle
-	//saveAnglesEbene();
+	
+	// speichere Phasenwinkel
+	if (kugelFlag==true)
+	{
+		saveAnglesKugel();
+	}
+	else
+	{
+		saveAnglesEbene();
+	}
 }
 
 void draw() 
@@ -313,22 +380,17 @@ void draw()
 		translate(width/2, height/2);
 		// 'Motor' Drehung
 		rotateZ(phi);
+
 		// Zeichne Nockenwelle
-		// Quadrat-Gitter, Kugel-Welle
-		nockenwelle_kugel(i);
-		// Quadrat-Gitter, Ebene Welle
-		//nockenwelle(i);
-		/*
-		// Versetztes Quadrat-Gitter, Ebene Welle
-		if (i%2==0)
+		// Kugelwelle
+		if (kugelFlag==true)
 		{
-			nockenwelle(i);
+			nockenwelle_kugel(i, offset);
 		}
 		else
 		{
-			nockenwelle_halb_verschoben(i);
+			nockenwelle_ebene(i, offset);
 		}
-		*/
 		popMatrix();
 	}
 }
