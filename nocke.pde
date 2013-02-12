@@ -8,8 +8,12 @@ import processing.opengl.*;
 // Bild
 // Bildbreite
 int size_x=600;
+// Bildbreite in cm
+float size_x_cm=200.0;
 // Bildhöhe 
 int size_y=600;
+// Bildhöhe in cm
+float size_y_cm=200.0;
 // Frame Rate (pro Sekunde)
 int fRate=10;
 
@@ -20,26 +24,75 @@ int fRate=10;
 float phi=0.0;
 // Drehgeschwindigkeit in Umdrehungen pro Sekunde (Framerate ist 60/s) 
 float delta_phi=1.0*TWO_PI/fRate;
-// Länge in x-Richtung
-float l_x=600;
-// Anzahl der Achsen
-int N_x=25;
-// Länge in z-Richtung
-float l_z=600;
+// Länge in x-Richtung (senkrecht zu den Wellen) in cm
+float l_x_cm=200;
+// Anzahl der Wellen
+int N_x=20;
+// Länge in z-Richtung (parallel zu den Wellen) in cm
+float l_z_cm=190;
+
+// Abgeleitete Parameter (nicht verändern!)
+// Länge in x-Richtung (senkrecht zu den Wellen) in pixel
+float l_x=size_x*l_x_cm/size_x_cm;
+// Länge in x-Richtung (senkrecht zu den Wellen) in pixel
+float l_z=size_x*l_z_cm/size_x_cm;
+
+// *******************************************************************
+// Nocke
+// *******************************************************************
+// Oberfläche offen (true) oder geschlossen (false)
+boolean closedFlag=false;
+// Große Halbachse der Ellipse in cm
+float cam_semi_major_axis_cm=4.0;
+// Kleine Halbachse der Ellipse in cm
+float cam_semi_minor_axis_cm=4.0;
+// Abstand des Achsenmittelpunktes vom Mittelpunkt der Nocke (Ellipse) in cm
+float cam_offset_cm=3.5;
+// Dicke der Nocke in cm
+float cam_thickness_cm=1.5;
+// Dicke der Pufferzone bis zu benachbarten Nocke (ohne versetzte Nocken) 
+float cam_thickness_buffer_cm=2.5;
+// Anzahl der Ebenen die die gekrümmte Oberfläche der Nocke bilden
+int Ns_cam=50;
+
+// Abgeleitete Parameter (nicht verändern!)
+// Abstand des Achsenmittelpunktes vom Mittelpunkt der Nocke (Ellipse) in Pixel
+float cam_offset=size_y*cam_offset_cm/size_y_cm;
+// Große Halbachse der Ellipse in Pixel
+float cam_semi_major_axis=size_y*cam_semi_major_axis_cm/size_y_cm;
+// Kleine Halbachse der Ellipse in Pixel
+float cam_semi_minor_axis=size_y*cam_semi_minor_axis_cm/size_y_cm;
+// Dicke der Nocke in Pixel
+float cam_thickness=size_y*cam_thickness_cm/size_y_cm;
 // Anzahl der Nocken pro Welle
-int N_z=100;
+int N_z=int(l_z_cm/(cam_thickness_cm+cam_thickness_buffer_cm));
 // Gitterparamter in x-Richtung
 float a_x=l_x/N_x;
 // Gitterparamter in z-Richtung
 float a_z=l_z/N_z;
+
+
+// *******************************************************************
+// Nockenwelle
+// *******************************************************************
+// Nocken halb versetzt (true) oder nicht (false)
+boolean offset=true;
+// Radius der Welle in cm
+float r_shaft_cm=0.5;
+// Anzahl der Ebenen die die gekrümmte Oberfläche der Welle bilden
+int Ns_shaft=50;
+// Abgeleitete Parameter (nicht verändern!)
+
+// Abgeleitete Parameter (nicht verändern!)
+float r_shaft=size_y*r_shaft_cm/size_y_cm;
 
 // *******************************************************************
 // Welle (Bewegungsart)
 // *******************************************************************
 // Kugelwelle (true) oder Ebenewelle (false)
 boolean kugelFlag=true;
-// Wellenlänge
-float lambda=12.5*a_z;
+// Wellenlänge in cm
+float lambda_cm=50.0;
 // Winkel zwischen x-Achse und Ausbreitungsrichtung der Welle (in Radiant)
 float theta=PI/2 * 0.6;
 // Kugel-Welle
@@ -49,37 +102,13 @@ float r_x=N_x/2.0;
 float r_z=N_z/2.0;
 
 // Abgeleitete Parameter (nicht verändern!)
+// Wellenlänge in pixel
+float lambda=size_x*lambda_cm/size_x_cm;
 // Wellenvektor (Kugelwelle)
 float k=TWO_PI/lambda;
 // Wellenvektor (Ebene Welle)
 float k_x=TWO_PI/lambda * cos(theta);
 float k_z=TWO_PI/lambda * sin(theta);
-
-// *******************************************************************
-// Nocke
-// *******************************************************************
-// Oberfläche offen (true) oder geschlossen (false)
-boolean closedFlag=false;
-// Abstand des Achsenmittelpunktes vom Mittelpunkt der Nocke (Ellipse)
-float cam_offset=0.20*a_x;
-// Große Halbachse der Ellipse
-float cam_semi_major_axis=0.4*a_x;
-// Kleine Halbachse der Ellipse
-float cam_semi_minor_axis=0.4*a_x;
-// Dicke der Nocke
-float cam_thickness=0.3*a_z;
-// Anzahl der Ebenen die die gekrümmte Oberfläche der Nocke bilden
-int Ns_cam=50;
-
-// *******************************************************************
-// Nockenwelle
-// *******************************************************************
-// Nocken halb versetzt (true) oder nicht (false)
-boolean offset=true;
-// Radius der Welle
-float r_shaft=0.05*a_x;
-// Anzahl der Ebenen die die gekrümmte Oberfläche der Welle bilden
-int Ns_shaft=50;
 
 
 // ********************************************************************
@@ -193,7 +222,9 @@ float phase_kugel_welle(float i, float j, float k, float ax, float az, float rx,
 }
 void nockenwelle_kugel(int i, boolean offset)
 {
+	fill(150);
         zylinder(r_shaft, l_z, Ns_shaft);
+	fill(255);
 	// Gehe zu Anfang der Welle
 	translate(0,0,-l_z/2);
 	// Verschiebe um halben Gitterabstand
@@ -328,7 +359,13 @@ void saveAnglesEbene()
 	}
 	saveStrings ("phasenwinkel_ebenewelle.txt", exportData);
 }
-
+void saveParameter()
+{
+	String dataAsString = "";
+	String [] exportData = new String [1];
+	exportData [0] = "Anzahl Nocken N_z = " + str (N_z) +  "\n";
+	saveStrings ("parameter.txt", exportData);
+}
 void setup()
 {
 	noStroke();
@@ -336,6 +373,8 @@ void setup()
 	//size(600,600,P3D);
 	frameRate(fRate);
 	
+	// speichere parameter
+	saveParameter();
 	// speichere Phasenwinkel
 	if (kugelFlag==true)
 	{
@@ -352,7 +391,13 @@ void draw()
 	// Hintergrund schwarz
 	background(0);
 	// Schatten an
-	lights();
+	//lights();
+	directionalLight(255, 255, 255, -1, -1, 0);
+	directionalLight(255, 255, 255, 1, 1, 0);
+	directionalLight(100, 100, 100, -1, 0, -1);
+	directionalLight(100, 100, 100, 1, 0, 1);
+	directionalLight(100, 100, 100, 0, -1, -1);
+	directionalLight(100, 100, 100, 0, 1, 1);
 	// Drehe 'Motor' weiter
 	phi+=delta_phi;
 	// Perspektive
