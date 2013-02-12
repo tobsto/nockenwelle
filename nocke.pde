@@ -50,7 +50,7 @@ float cam_semi_minor_axis_cm=4.0;
 float cam_offset_cm=3.5;
 // Dicke der Nocke in cm
 float cam_thickness_cm=1.5;
-// Dicke der Pufferzone bis zu benachbarten Nocke (ohne versetzte Nocken) 
+// Dicke der Pufferzone bis zu benachbarten Nocke
 float cam_thickness_buffer_cm=2.5;
 // Anzahl der Ebenen die die gekrümmte Oberfläche der Nocke bilden
 int Ns_cam=50;
@@ -65,7 +65,7 @@ float cam_semi_minor_axis=size_y*cam_semi_minor_axis_cm/size_y_cm;
 // Dicke der Nocke in Pixel
 float cam_thickness=size_y*cam_thickness_cm/size_y_cm;
 // Anzahl der Nocken pro Welle
-int N_z=int(l_z_cm/(cam_thickness_cm+cam_thickness_buffer_cm));
+int N_z=int(l_z_cm/(cam_thickness_cm+cam_thickness_buffer_cm)+0.5);
 // Gitterparamter in x-Richtung
 float a_x=l_x/N_x;
 // Gitterparamter in z-Richtung
@@ -97,9 +97,9 @@ float lambda_cm=50.0;
 float theta=PI/2 * 0.6;
 // Kugel-Welle
 // Quellenposition der Kugelwelle in x-Richtung (in Einheiten der Gitterparameter)
-float r_x=N_x/2.0;
+float r_x=(N_x-1)/2.0;
 // Quellenposition der Kugelwelle in z-Richtung (in Einheiten der Gitterparameter)
-float r_z=N_z/2.0;
+float r_z=(N_z-1)/2.0;
 
 // Abgeleitete Parameter (nicht verändern!)
 // Wellenlänge in pixel
@@ -305,17 +305,22 @@ void nockenwelle_ebene(int i, boolean offset)
 
 void saveAnglesKugel()
 {
-	String dataAsString = "";
-	String [] exportData = new String [N_x];
+	// Gesamtanzahl der Nocken
+	int NN=N_x*N_z;
+	if (offset)
+	{
+		NN=(N_x+1)/2*N_z + N_x/2*(N_z-1);
+	}
+	String [] exportData = new String [NN];
+	int n=0;
 	for (int i = 0; i<N_x; i++)
 	{
-		dataAsString = "";
-		int NN=N_z;
+		int Nzp=N_z;
 		if (offset)
 		{
-			NN=N_z-i%2;
+			Nzp=N_z-i%2;
 		}
-		for (int j=0; j!=NN; j++)
+		for (int j=0; j!=Nzp; j++)
 		{
 			// Drehung der Nocke (Anteil in z-Richtung)
 			float jp = j;
@@ -324,26 +329,32 @@ void saveAnglesKugel()
 				jp+=i%2*0.5;
 			}
 			// Phasenwinkel in Grad
-			float data =360.0/TWO_PI * phase_kugel_welle(float(i), jp, k, a_x, a_z, r_x, r_z) % 360;     
-			dataAsString += str (data) +  "\t";
+			float angle =360.0/TWO_PI * phase_kugel_welle(float(i), jp, k, a_x, a_z, r_x, r_z) % 360;     
+			float position_in_cm=jp*l_z_cm/float(N_z-1);
+			exportData[n] = str(float(i)) + "\t" + str(position_in_cm) + "\t" + str (angle);
+			n++;
 		}
-		exportData [i] = dataAsString;
 	}
 	saveStrings ("phasenwinkel_kugelwelle.txt", exportData);
 }
 void saveAnglesEbene()
 {
-	String dataAsString = "";
-	String [] exportData = new String [N_x];
+	// Gesamtanzahl der Nocken
+	int NN=N_x*N_z;
+	if (offset)
+	{
+		NN=(N_x+1)/2*N_z + N_x/2*(N_z-1);
+	}
+	String [] exportData = new String [NN];
+	int n=0;
 	for (int i = 0; i<N_x; i++)
 	{
-		dataAsString = "";
-		int NN=N_z;
+		int Nzp=N_z;
 		if (offset)
 		{
-			NN=N_z-i%2;
+			Nzp=N_z-i%2;
 		}
-		for (int j=0; j!=NN; j++)
+		for (int j=0; j!=Nzp; j++)
 		{
 			// Drehung der Nocke (Anteil in z-Richtung)
 			float jp = j;
@@ -352,12 +363,13 @@ void saveAnglesEbene()
 				jp+=i%2*0.5;
 			}
 			// Phasenwinkel in Grad
-			float data =360.0/TWO_PI * phase_ebene_welle(i, jp, k_x, k_z, a_x, a_z) % 360;     
-			dataAsString += str (data) +  "\t";
+			float angle =360.0/TWO_PI * phase_ebene_welle(i, jp, k_x, k_z, a_x, a_z) % 360;
+			float position_in_cm=jp*l_z_cm/float(N_z-1);
+			exportData[n] = str(float(i)) + "\t" + str(position_in_cm) + "\t" + str (angle);
+			n++;
 		}
-		exportData [i] = dataAsString;
 	}
-	saveStrings ("phasenwinkel_ebenewelle.txt", exportData);
+	saveStrings ("phasenwinkel_kugelwelle.txt", exportData);
 }
 void saveParameter()
 {
